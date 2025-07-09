@@ -1,0 +1,10 @@
+name: dummy-ci         # 워크플로 이름
+
+on: [push, pull_request]   # 실행 조건 – 푸시·PR마다
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # 코드를 체크아웃
+      - run: echo "✅ CI is running!"
