@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SILK - 감정 지도</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .top-ui {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: #788AE6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #8877E6;
+    }
+
+    #map {
+      height: 90vh;
+      width: 100%;
+    }
+
+    .logo {
+      max-width: 200px;
+      margin-bottom: 20px;
+    }
+
+    .emotion-marker {
+      color: white;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-align: center;
+      background-color: rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="top-ui">
+    <img src="SILK_logo.png" alt="SILK 로고" class="logo" />
+    <h2>SILK 로드</h2>
+    <button class="feed-button" onclick="goToFeed()">SILK 피드로 이동</button>
+  </div>
+  <div id="map"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <!-- Google Maps API -->
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCMm6FiU4E-qXxXxJsgoKErBbPxRiWlf38&callback=initMap">
+  </script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMm6FiU4E-qXxXxJsgoKErBbPxRiWlf38",
+      authDomain: "silk-f4d35.firebaseapp.com",
+      databaseURL: "https://silk-f4d35-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "silk-f4d35",
+      storageBucket: "silk-f4d35.appspot.com",
+      messagingSenderId: "606702905961",
+      appId: "1:606702905961:web:76b229b98abbb1d545e75c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let map;
+    let likes = {};
+
+    function goToFeed() {
+      location.href = "SILK_feed.html";
+    }
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 14,
+        center: { lat: 35.8443, lng: 128.6410 } //기본 위치 경북고
+      });
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(async position => {
+          const currentPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          const currentUser = localStorage.getItem("currentUser");
+          if (!currentUser) return;
+
+          const emotionSnap = await db.ref("emotions/" + currentUser).get();
+          if (!emotionSnap.exists()) return;
+
+          const myEmotion = emotionSnap.val();
+
+          await db.ref("mapFeed/" + currentUser).set({
+            id: currentUser,
+            emotion: myEmotion.emotion || "",
+            color: myEmotion.color || "#888888",
+            borderStyle: myEmotion.borderStyle || "solid",
+            lat: currentPos.lat,
+            lng: currentPos.lng,
+            timestamp: Date.now()
+          });
+
+          map.setCenter(currentPos);
+          renderMarkers();
+        });
+      } else {
+        alert("위치 서비스를 지원하지 않습니다.");
+      }
+    }
+
+    async function renderMarkers() {
+      const now = Date.now();
+      const snapshot = await db.ref("mapFeed").get();
+      if (!snapshot.exists()) return;
+
+      const data = snapshot.val();
+
+      for (const entry of Object.values(data)) {
+        if (now - entry.timestamp > 86400000) continue;
+
+        const likeSnap = await db.ref("likes/" + entry.id).get();
+        const likeCount = likeSnap.exists() ? likeSnap.val() : 0;
+        likes[entry.id] = likeCount;
+
+        const marker = new google.maps.Marker({
+          position: { lat: entry.lat, lng: entry.lng },
+          map: map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: entry.color,
+            fillOpacity: 1,
+            strokeWeight: 0
+          }
+        });
+
+        const info = new google.maps.InfoWindow({
+          content: `
+            <div style="text-align:center; max-width: 200px;">
+              <div style="
+                display: inline-block;
+                padding: 15px;
+                border-radius: 15px;
+                background-color: ${entry.color};
+                color: white;
+                font-weight: bold;
+                border: 5px ${entry.borderStyle || 'solid'} white;
+                margin-bottom: 10px;">
+              </div>
+              <div>
+                <button onclick="likeEmotion('${entry.id}')" style="
+                  padding: 6px 12px;
+                  background: #6A9FB5;
+                  color: white;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;">
+                  공감하기
+                </button>
+                <div id="like-count-${entry.id}" style="margin-top: 5px; font-size: 14px;">
+                  공감 수: ${likeCount}
+                </div>
+              </div>
+            </div>`
+        });
+
+        marker.addListener("click", () => {
+          info.open(map, marker);
+        });
+      }
+    }
+
+
+
+    function likeEmotion(userId) {
+      const likeRef = db.ref("likes/" + userId);
+      likeRef.transaction(current => (current || 0) + 1)
+        .then(() => {
+          alert("공감했습니다.");
+          const countElement = document.getElementById(`like-count-${userId}`);
+          if (countElement) {
+            countElement.innerText = `공감 수: ${(likes[userId] || 0) + 1}`;
+            likes[userId] = (likes[userId] || 0) + 1; // 로컬 상태도 업데이트
+          }
+        })
+        .catch((error) => {
+          console.error("공감 실패:", error);
+          alert("공감에 실패했습니다.");
+        });
+    }
+
+
+  </script>
+</body>
+</html>
