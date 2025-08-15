@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function Login() {
+export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true); // true면 로그인, false면 회원가입
 
   return (
@@ -41,7 +41,7 @@ export default function Login() {
         </button>
 
         <p className="text-center text-sm text-gray-500 mt-4">
-          {isLogin ? "계정이 없으신가요?" : "이미 계정이 있으신가요?"}{" "}
+          {isLogin ? "계정이 없으신가요?" : "이미 계정이 있으신가요?"}{""}
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
