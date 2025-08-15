@@ -1,11 +1,10 @@
-
 'use client';
 import React from 'react';
 
-type Tab = 'feed' | 'write' | 'explore';
+type Tab = 'feed' | 'write' | 'explore' | 'login';
 
 export default function TabBar({ current }: { current: Tab }) {
-  const tabLink = (t: Tab, label: string) => (
+  const tabLink = (t: Tab, label: string, extraStyle: React.CSSProperties = {}) => (
     <a
       key={t}
       href={`#${t}`}
@@ -16,6 +15,7 @@ export default function TabBar({ current }: { current: Tab }) {
         background: current === t ? '#111' : '#fff',
         color: current === t ? '#fff' : '#111',
         textDecoration: 'none',
+        ...extraStyle,
       }}
     >
       {label}
@@ -23,10 +23,22 @@ export default function TabBar({ current }: { current: Tab }) {
   );
 
   return (
-    <nav style={{ display: 'flex', gap: 8, padding: 12, position: 'sticky', top: 0, background: '#fafafa', zIndex: 10 }}>
+    <nav
+      style={{
+        display: 'flex',
+        gap: 8,
+        padding: 12,
+        position: 'sticky',
+        top: 0,
+        background: '#fafafa',
+        zIndex: 10,
+      }}
+    >
       {tabLink('feed', 'Feed')}
       {tabLink('write', 'Write')}
       {tabLink('explore', 'Explore')}
+      {/* 로그인 버튼만 오른쪽 끝으로 */}
+      {tabLink('login', 'Login', { marginLeft: 'auto' })}
     </nav>
   );
 }
