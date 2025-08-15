@@ -5,10 +5,10 @@ import TabBar from '@/components/TabBar';
 import Feed from '@/components/Feed';
 import Write from '@/components/Write';
 import Explore from '@/components/Explore';
-import LoginPage from '@/components/Login';
+import Login from '@/components/Login';
+import Signup from '@/components/Signup';
 
-
-type Tab = 'feed' | 'write' | 'explore | login'
+type Tab = 'feed' | 'write' | 'explore' | 'login' | 'signup'
 
 export default function Page() {
   const [tab, setTab] = useState<Tab>('feed');
@@ -30,7 +30,8 @@ export default function Page() {
       {tab === 'feed' && <Feed />}
       {tab === 'write' && <Write />}
       {tab === 'explore' && <Explore />}
-      {tab === 'login' && <LoginPage />}
+      {tab === 'login' && <Login />}
+      {tab === 'signup' && <Signup />}
     </main>
   );
 }

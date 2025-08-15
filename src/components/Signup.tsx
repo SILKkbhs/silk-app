@@ -1,20 +1,25 @@
-// components/Login.tsx
+// components/Signup.tsx
 'use client';
 import { useState } from 'react';
 
-export default function Login() {
+export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
 
-  const handleLogin = () => {
-    // 로그인 로직 (Firebase 등) 추가
-    alert(`로그인 시도: ${email}`);
+  const handleSignup = () => {
+    if (password !== confirm) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    // 회원가입 로직 추가 (Firebase 등)
+    alert(`회원가입 완료! 이메일: ${email}`);
   };
 
   return (
     <div className="flex items-center justify-center min-h-[70vh]">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">로그인</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">회원가입</h1>
 
         <input
           type="email"
@@ -32,24 +37,21 @@ export default function Login() {
           className="w-full p-3 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
+        <input
+          type="password"
+          placeholder="비밀번호 확인"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          className="w-full p-3 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+
         <button
           type="button"
-          onClick={handleLogin}
+          onClick={handleSignup}
           className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition"
         >
-          로그인
+          회원가입
         </button>
-
-        <p className="text-center text-sm text-gray-500 mt-4">
-          계정이 없으신가요?{' '}
-          <button
-            type="button"
-            onClick={() => (location.hash = 'signup')} // 회원가입 탭으로 이동
-            className="text-indigo-600 hover:underline"
-          >
-            회원가입
-          </button>
-        </p>
       </div>
     </div>
   );
