@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function Login() {
   const [isLogin, setIsLogin] = useState(true); // true면 로그인, false면 회원가입
 
   return (
